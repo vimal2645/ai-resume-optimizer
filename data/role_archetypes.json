@@ -1,0 +1,276 @@
+{
+  "nlp_ml_engineer": {
+    "display_name": "NLP / Machine Learning Engineer",
+    "title_keywords": ["nlp engineer", "machine learning engineer", "ml engineer", "natural language processing engineer"],
+    "signal_keywords": [
+      "nlp", "natural language processing", "bert", "transformer", "transformers",
+      "hugging face", "spacy", "nltk", "fine-tuning", "fine tuning", "embeddings",
+      "text classification", "named entity recognition", "language model", "tokenization"
+    ],
+    "skill_priority": [
+      "python", "nlp", "natural language processing", "bert", "transformer",
+      "hugging face", "spacy", "nltk", "fine-tuning", "embeddings", "pytorch",
+      "tensorflow", "scikit-learn", "docker", "kubernetes", "aws"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "NLP/ML Engineer with {years_experience} of experience building language models and intelligent systems. Proficient in {top_3_skills}.",
+    "role_label": "NLP / Machine Learning Engineer"
+  },
+  "ai_engineer": {
+    "display_name": "AI / ML Engineer",
+    "signal_keywords": [
+      "machine learning", "deep learning", "neural network", "ai", "artificial intelligence",
+      "nlp", "natural language processing", "computer vision", "reinforcement learning",
+      "generative ai", "large language model", "llm", "transformer", "pytorch", "tensorflow",
+      "hugging face", "mlops", "model deployment", "fine-tuning", "rag", "embeddings",
+      "langchain", "vector database", "scikit-learn", "xgboost", "feature engineering",
+      "model training", "gpu", "cuda", "model monitoring", "inference", "bert", "gpt"
+    ],
+    "skill_priority": [
+      "pytorch", "tensorflow", "large language model", "machine learning", "deep learning",
+      "natural language processing", "computer vision", "scikit-learn", "hugging face",
+      "python", "mlops", "model deployment", "fine-tuning", "rag", "embeddings",
+      "numpy", "pandas", "generative ai", "reinforcement learning", "feature engineering",
+      "xgboost", "docker", "kubernetes", "aws", "azure", "gcp", "git", "sql"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "certifications", "education"],
+    "summary_template": "AI/ML Engineer with {years_experience} of experience building production-ready models and intelligent systems. Proficient in {top_3_skills}. Passionate about solving real-world problems through applied machine learning and deep learning.",
+    "role_label": "AI / Machine Learning Engineer"
+  },
+  "data_scientist": {
+    "display_name": "Data Scientist",
+    "title_keywords": ["data scientist", "full stack data scientist", "hardcore full stack data scientist"],
+    "signal_keywords": [
+      "data science", "data analysis", "statistics", "statistical analysis", "hypothesis testing",
+      "regression", "classification", "clustering", "predictive analytics", "exploratory data analysis",
+      "feature engineering", "pandas", "numpy", "matplotlib", "seaborn", "plotly",
+      "scikit-learn", "xgboost", "lightgbm", "a/b testing", "time series", "forecasting",
+      "data visualization", "business intelligence", "power bi", "tableau", "jupyter",
+      "python", "r", "sql", "data pipeline", "data wrangling", "data mining", "data quality"
+    ],
+    "skill_priority": [
+      "python", "r", "sql", "pandas", "numpy", "scikit-learn", "data analysis",
+      "statistical analysis", "data visualization", "machine learning", "feature engineering",
+      "matplotlib", "seaborn", "plotly", "xgboost", "lightgbm", "time series",
+      "a/b testing", "hypothesis testing", "power bi", "tableau", "jupyter notebook",
+      "deep learning", "tensorflow", "pytorch", "spark", "docker", "git"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "Data Scientist with {years_experience} of experience uncovering insights from complex datasets. Expert in {top_3_skills}. Adept at translating data into actionable business decisions through rigorous statistical methods and visualization.",
+    "role_label": "Data Scientist"
+  },
+  "data_engineer": {
+    "display_name": "Data Engineer",
+    "signal_keywords": [
+      "data engineering", "etl", "elt", "data pipeline", "data warehouse", "data lake",
+      "spark", "apache spark", "kafka", "airflow", "dbt", "databricks", "hadoop",
+      "bigquery", "snowflake", "redshift", "hive", "flink", "beam", "nifi",
+      "sql", "python", "scala", "data orchestration", "batch processing", "stream processing",
+      "real time", "data quality", "data catalog", "data governance", "data lineage",
+      "aws glue", "aws kinesis", "azure data factory", "google dataflow", "cloud storage"
+    ],
+    "skill_priority": [
+      "python", "sql", "spark", "kafka", "airflow", "dbt", "data pipeline", "etl",
+      "bigquery", "snowflake", "redshift", "databricks", "scala", "hadoop", "flink",
+      "data warehouse", "data lake", "aws", "gcp", "azure", "docker", "kubernetes",
+      "git", "data quality", "data governance", "data modeling"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "Data Engineer with {years_experience} of experience designing and maintaining scalable data infrastructure. Proficient in {top_3_skills}. Experienced in building reliable pipelines that power analytics and machine learning at scale.",
+    "role_label": "Data Engineer"
+  },
+  "database_engineer": {
+    "display_name": "Database Engineer / Developer",
+    "signal_keywords": [
+      "database engineer", "database developer", "dba", "database administration", "sql developer",
+      "sql", "t-sql", "pl/sql", "stored procedures", "triggers", "views", "functions",
+      "database design", "data modeling", "query optimization", "performance tuning",
+      "database migration", "sql server", "postgresql", "mysql", "oracle", "nosql",
+      "mongodb", "etl", "data warehouse", "schema design", "database architecture"
+    ],
+    "skill_priority": [
+      "sql", "sql server", "postgresql", "mysql", "oracle", "database design",
+      "data modeling", "query optimization", "performance tuning", "stored procedures",
+      "t-sql", "pl/sql", "database migration", "etl", "python", "nosql", "mongodb"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "Database Engineer with {years_experience} of experience designing, optimizing, and maintaining scalable database systems. Proficient in {top_3_skills}. Strong track record of improving query performance and ensuring data integrity.",
+    "role_label": "Database Engineer / Developer"
+  },
+  "database_sql_developer": {
+    "display_name": "Database / SQL Developer",
+    "title_keywords": ["sql developer", "database sql developer"],
+    "signal_keywords": [
+      "database developer", "sql developer", "stored procedures", "query optimization",
+      "schema design", "schema", "t-sql", "pl/sql", "triggers", "views",
+      "database design", "performance tuning", "database migration"
+    ],
+    "skill_priority": [
+      "sql", "t-sql", "pl/sql", "stored procedures", "schema design", "database design",
+      "query optimization", "performance tuning", "postgresql", "mysql", "oracle", "sql server"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "Database/SQL Developer with {years_experience} of experience designing and optimizing reliable data systems. Proficient in {top_3_skills}.",
+    "role_label": "Database / SQL Developer"
+  },
+  "backend_engineer": {
+    "display_name": "Backend Engineer",
+    "signal_keywords": [
+      "backend", "server side", "api", "rest api", "microservices", "node.js", "python",
+      "java", "go", "golang", "rust", "spring boot", "django", "flask", "fastapi",
+      "express", "postgresql", "mysql", "mongodb", "redis", "rabbitmq", "kafka",
+      "docker", "kubernetes", "aws", "azure", "gcp", "grpc", "message queue",
+      "system design", "distributed systems", "scalability", "high availability",
+      "authentication", "authorization", "oauth", "jwt", "sql", "orm", "database design"
+    ],
+    "skill_priority": [
+      "python", "java", "go", "node.js", "rest api", "microservices", "postgresql",
+      "sql", "mongodb", "redis", "docker", "kubernetes", "aws", "system design",
+      "django", "fastapi", "spring boot", "kafka", "grpc", "distributed systems",
+      "authentication", "oauth", "jwt", "git", "linux", "ci/cd"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "Backend Engineer with {years_experience} of experience building scalable and reliable server-side systems. Proficient in {top_3_skills}. Skilled in designing high-performance APIs and distributed architectures.",
+    "role_label": "Backend / Server-Side Engineer"
+  },
+  "frontend_engineer": {
+    "display_name": "Frontend Engineer",
+    "signal_keywords": [
+      "frontend", "front end", "ui", "ux", "react", "vue", "angular", "next.js",
+      "svelte", "javascript", "typescript", "html", "css", "sass", "tailwind",
+      "webpack", "vite", "jest", "cypress", "accessibility", "wcag", "responsive design",
+      "component library", "design system", "figma", "user experience", "performance",
+      "web vitals", "seo", "pwa", "progressive web app", "browser api", "dom"
+    ],
+    "skill_priority": [
+      "react", "typescript", "javascript", "next.js", "html", "css", "vue",
+      "angular", "tailwind", "sass", "webpack", "vite", "jest", "cypress",
+      "accessibility", "figma", "ui design", "ux design", "performance",
+      "responsive design", "pwa", "git", "rest api"
+    ],
+    "preferred_section_order": ["summary", "skills", "projects", "experience", "education", "certifications"],
+    "summary_template": "Frontend Engineer with {years_experience} of experience crafting high-performance, accessible web interfaces. Proficient in {top_3_skills}. Passionate about delivering excellent user experiences through clean, maintainable code.",
+    "role_label": "Frontend / UI Engineer"
+  },
+  "devops_engineer": {
+    "display_name": "DevOps / Platform Engineer",
+    "signal_keywords": [
+      "devops", "devsecops", "platform engineering", "sre", "site reliability",
+      "kubernetes", "docker", "terraform", "ansible", "helm", "ci/cd", "jenkins",
+      "github actions", "gitlab ci", "aws", "azure", "gcp", "monitoring", "observability",
+      "prometheus", "grafana", "datadog", "elk stack", "logstash", "infrastructure as code",
+      "cloud", "linux", "networking", "security", "incident management", "on-call",
+      "containerization", "service mesh", "istio", "vault", "secrets management"
+    ],
+    "skill_priority": [
+      "kubernetes", "docker", "terraform", "aws", "ci/cd", "linux", "ansible",
+      "helm", "prometheus", "grafana", "jenkins", "github actions", "gcp", "azure",
+      "python", "bash", "networking", "security", "vault", "istio", "git"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "certifications", "projects", "education"],
+    "summary_template": "DevOps/Platform Engineer with {years_experience} of experience automating and scaling cloud infrastructure. Proficient in {top_3_skills}. Focused on reliability, observability, and continuous delivery.",
+    "role_label": "DevOps / Platform / SRE Engineer"
+  },
+  "fullstack_engineer": {
+    "display_name": "Full Stack Engineer",
+    "signal_keywords": [
+      "full stack", "fullstack", "frontend", "backend", "react", "node.js", "javascript",
+      "typescript", "python", "java", "rest api", "sql", "mongodb", "postgresql",
+      "docker", "aws", "html", "css", "microservices", "graphql", "next.js"
+    ],
+    "skill_priority": [
+      "react", "node.js", "javascript", "typescript", "python", "postgresql",
+      "mongodb", "rest api", "next.js", "html", "css", "docker", "aws",
+      "graphql", "git", "ci/cd", "sql", "redis"
+    ],
+    "preferred_section_order": ["summary", "skills", "projects", "experience", "education", "certifications"],
+    "summary_template": "Full Stack Engineer with {years_experience} of experience building end-to-end web applications. Proficient in {top_3_skills}. Adept at bridging frontend user experience with robust backend systems.",
+    "role_label": "Full Stack Engineer"
+  },
+  "gtm_engineer": {
+    "display_name": "Go-to-Market / Sales Engineer",
+    "signal_keywords": [
+      "go-to-market", "gtm", "sales engineer", "solutions engineer", "pre-sales",
+      "sales enablement", "product demo", "proof of concept", "poc", "crm", "salesforce",
+      "hubspot", "customer success", "account management", "revenue", "pipeline",
+      "market research", "competitive analysis", "pricing strategy", "business development",
+      "partnerships", "channel sales", "technical sales", "enterprise sales", "b2b", "b2c",
+      "customer acquisition", "growth", "kpi", "quota", "deal cycle", "rfp", "procurement"
+    ],
+    "skill_priority": [
+      "salesforce", "crm", "customer success", "sales enablement", "product demo",
+      "business development", "account management", "revenue", "market research",
+      "competitive analysis", "go-to-market", "hubspot", "enterprise sales",
+      "communication", "presentation", "negotiation", "partnerships", "pricing"
+    ],
+    "preferred_section_order": ["summary", "experience", "skills", "projects", "education", "certifications"],
+    "summary_template": "Go-to-Market professional with {years_experience} of experience driving revenue growth and customer acquisition. Skilled in {top_3_skills}. Proven track record of bridging technical and business teams to close enterprise deals.",
+    "role_label": "GTM / Sales / Solutions Engineer"
+  },
+  "product_manager": {
+    "display_name": "Product Manager",
+    "signal_keywords": [
+      "product management", "product manager", "product roadmap", "product strategy",
+      "user research", "user stories", "backlog grooming", "sprint planning", "okr",
+      "kpi", "stakeholder management", "prioritization", "agile", "scrum", "jira",
+      "product discovery", "market research", "competitive analysis", "go-to-market",
+      "product launch", "mvp", "metrics", "data driven", "a/b testing", "funnel",
+      "retention", "engagement", "growth", "customer interviews", "wireframes", "prototyping"
+    ],
+    "skill_priority": [
+      "product management", "product roadmap", "user research", "agile", "scrum",
+      "stakeholder management", "data driven", "kpi", "okr", "jira", "a/b testing",
+      "competitive analysis", "go-to-market", "backlog grooming", "prioritization",
+      "customer interviews", "wireframes", "product strategy", "metrics", "growth"
+    ],
+    "preferred_section_order": ["summary", "experience", "skills", "projects", "education", "certifications"],
+    "summary_template": "Product Manager with {years_experience} of experience leading cross-functional teams to deliver impactful products. Skilled in {top_3_skills}. Data-driven leader with a customer-first mindset and strong technical fluency.",
+    "role_label": "Product Manager"
+  },
+  "mobile_engineer": {
+    "display_name": "Mobile Engineer",
+    "signal_keywords": [
+      "android", "ios", "mobile", "react native", "flutter", "swift", "kotlin",
+      "objective-c", "android sdk", "xcode", "mobile app", "app store", "play store",
+      "push notifications", "offline first", "mobile ui", "jetpack compose", "swiftui",
+      "firebase", "mobile testing", "ui testing", "instrumentation", "gradle", "cocoapods"
+    ],
+    "skill_priority": [
+      "react native", "flutter", "kotlin", "swift", "android", "ios",
+      "firebase", "mobile ui", "push notifications", "rest api", "git",
+      "android sdk", "xcode", "typescript", "javascript", "docker"
+    ],
+    "preferred_section_order": ["summary", "skills", "projects", "experience", "education", "certifications"],
+    "summary_template": "Mobile Engineer with {years_experience} of experience building cross-platform and native mobile applications. Proficient in {top_3_skills}. Focused on performance, reliability, and polished user experiences.",
+    "role_label": "Mobile / App Engineer"
+  },
+  "security_engineer": {
+    "display_name": "Security / Cybersecurity Engineer",
+    "signal_keywords": [
+      "security", "cybersecurity", "penetration testing", "ethical hacking", "vulnerability",
+      "red team", "blue team", "soc", "siem", "firewall", "encryption", "pki",
+      "oauth", "jwt", "saml", "sso", "iam", "rbac", "zero trust", "devsecops",
+      "owasp", "threat modeling", "incident response", "forensics", "malware analysis",
+      "network security", "endpoint security", "cloud security", "compliance", "gdpr"
+    ],
+    "skill_priority": [
+      "penetration testing", "vulnerability assessment", "siem", "iam", "encryption",
+      "oauth", "jwt", "zero trust", "devsecops", "owasp", "cloud security",
+      "network security", "incident response", "compliance", "python", "linux"
+    ],
+    "preferred_section_order": ["summary", "skills", "certifications", "experience", "projects", "education"],
+    "summary_template": "Security Engineer with {years_experience} of experience protecting systems and applications from threats. Proficient in {top_3_skills}. Committed to proactive security posture and regulatory compliance.",
+    "role_label": "Security / Cybersecurity Engineer"
+  },
+  "generic": {
+    "display_name": "General Technical Role",
+    "signal_keywords": [],
+    "skill_priority": [
+      "python", "java", "javascript", "sql", "git", "docker", "aws",
+      "rest api", "agile", "communication", "problem solving", "teamwork"
+    ],
+    "preferred_section_order": ["summary", "skills", "experience", "projects", "education", "certifications"],
+    "summary_template": "Versatile professional with {years_experience} of experience in technology. Proficient in {top_3_skills}. Committed to delivering high-quality solutions and continuous professional growth.",
+    "role_label": "Technical Professional"
+  }
+}
