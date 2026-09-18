@@ -23,7 +23,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
         
         prompt = f"""
         Extract a list of professional and technical skills from the following Job Description.
-        Return ONLY a JSON array of strings, in lowercase. Do not include any other text or markdown blocks.
+        Return a JSON object with a single key "skills" containing an array of strings in lowercase. Do not include any other text or markdown blocks.
         
         Job Description:
         {jd_text}
