@@ -19,7 +19,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
 
     try:
         from groq import Groq
-        client = Groq(api_key=api_key)
+        client = Groq(api_key=api_key, max_retries=0)
         
         prompt = f"""
         Extract a list of professional and technical skills from the following Job Description.
@@ -32,13 +32,16 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="allam-2-7b",
-            temperature=0.0,
-            response_format={"type": "json_object"}
+            temperature=0.0
         )
         
-        # Parse the JSON response. Since we asked for an array but used JSON object mode, 
-        # the model usually wraps it in a key like "skills". Let's handle both array directly or object wrapper.
         response_text = response.choices[0].message.content.strip()
+        # Clean up markdown code blocks if the model ignored instructions
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.lower().startswith("json"):
+                response_text = response_text[4:].strip()
+                
         data = json.loads(response_text)
         
         new_skills = []
@@ -72,7 +75,7 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
 
     try:
         from groq import Groq
-        client = Groq(api_key=api_key)
+        client = Groq(api_key=api_key, max_retries=0)
         
         skills_str = ", ".join(target_skills[:5]) # limit to top 5 to save tokens
         if are_missing:
