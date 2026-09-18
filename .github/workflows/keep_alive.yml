@@ -11,4 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Streamlit App
-        run: curl -sL https://free-ats-scanner.streamlit.app/ > /dev/null
+        run: curl -sL https://vpixcel-ai-resume-scanner.streamlit.app/ > /dev/null
