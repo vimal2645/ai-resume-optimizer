@@ -31,7 +31,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
 
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="allam-2-7b",
+            model="llama3-8b-8192",
             temperature=0.0
         )
         
@@ -85,7 +85,7 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
 
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="allam-2-7b",
+            model="llama3-8b-8192",
             temperature=0.7,
             max_tokens=80
         )
