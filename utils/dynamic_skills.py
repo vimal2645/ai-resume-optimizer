@@ -31,7 +31,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
 
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama3-70b-8192",
+            model="llama-3.1-70b-versatile",
             temperature=0.0
         )
         
@@ -55,7 +55,43 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
         return [str(s).lower() for s in new_skills]
     except Exception as e:
         print(f"Groq API fallback triggered due to error: {e}")
-        return None
+        try:
+            import google.generativeai as genai
+            gemini_key = None
+            try:
+                gemini_key = st.secrets.get("GEMINI_API_KEY")
+            except Exception:
+                gemini_key = os.environ.get("GEMINI_API_KEY")
+                
+            if not gemini_key:
+                print("Gemini API key not found in secrets/environment.")
+                return None
+                
+            genai.configure(api_key=gemini_key)
+            gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            response = gemini_model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Clean up markdown code blocks if the model ignored instructions
+            if response_text.startswith("```"):
+                response_text = response_text.split("```")[1]
+                if response_text.lower().startswith("json"):
+                    response_text = response_text[4:].strip()
+                    
+            data = json.loads(response_text)
+            
+            new_skills = []
+            if isinstance(data, list):
+                new_skills = data
+            elif isinstance(data, dict):
+                for val in data.values():
+                    if isinstance(val, list):
+                        new_skills.extend(val)
+                        
+            return [str(s).lower() for s in new_skills]
+        except Exception as gemini_e:
+            print(f"Gemini API fallback also failed: {gemini_e}")
+            return None
 
 def generate_improvement_tips(target_skills: list, job_title: str, are_missing: bool = True) -> str:
     """
@@ -85,14 +121,32 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
 
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             temperature=0.7,
             max_tokens=80
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Groq API tips error: {e}")
-        return ""
+        try:
+            import google.generativeai as genai
+            gemini_key = None
+            try:
+                gemini_key = st.secrets.get("GEMINI_API_KEY")
+            except Exception:
+                gemini_key = os.environ.get("GEMINI_API_KEY")
+                
+            if not gemini_key:
+                print("Gemini API key not found in secrets/environment.")
+                return ""
+                
+            genai.configure(api_key=gemini_key)
+            gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            response = gemini_model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as gemini_e:
+            print(f"Gemini API tips fallback error: {gemini_e}")
+            return ""
 
 def update_local_db(new_skills: list):
     """
