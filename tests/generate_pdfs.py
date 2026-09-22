@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, '.')
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz  # PyMuPDF
     HAS_FITZ = True
 except ImportError:
     HAS_FITZ = False

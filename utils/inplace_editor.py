@@ -220,7 +220,7 @@ def edit_pdf_skills(
         return file_bytes, False, "", ""
 
     try:
-        import fitz  # PyMuPDF
+        import pymupdf as fitz  # PyMuPDF
     except ImportError:
         # PyMuPDF not installed — return original unchanged
         return file_bytes, False, "", ""

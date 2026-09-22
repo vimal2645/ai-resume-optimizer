@@ -89,7 +89,7 @@ def _make_test_pdf(
     Returns None if PyMuPDF is not installed (Test 3 PDF sub-test is skipped).
     """
     try:
-        import fitz
+        import pymupdf as fitz
     except ImportError:
         return None
 

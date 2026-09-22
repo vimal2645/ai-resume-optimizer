@@ -31,7 +31,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
 
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-70b-versatile",
+            model="mixtral-8x7b-32768",
             temperature=0.0
         )
         
@@ -68,7 +68,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
                 return None
                 
             genai.configure(api_key=gemini_key)
-            gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
             response = gemini_model.generate_content(prompt)
             response_text = response.text.strip()
             
@@ -121,7 +121,7 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
 
         response = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant",
+            model="mixtral-8x7b-32768",
             temperature=0.7,
             max_tokens=80
         )
@@ -141,7 +141,7 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
                 return ""
                 
             genai.configure(api_key=gemini_key)
-            gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
             response = gemini_model.generate_content(prompt)
             return response.text.strip()
         except Exception as gemini_e:
