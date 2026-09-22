@@ -29,11 +29,21 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
         {jd_text}
         """
 
-        response = client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model="llama-3.3-70b-versatile",
-            temperature=0.0
-        )
+        groq_models = ["llama-3.3-70b-versatile", "groq/openai/gpt-oss-120b", "llama-3.1-8b-instant", "gemma2-9b-it"]
+        response = None
+        for model_name in groq_models:
+            try:
+                response = client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=model_name,
+                    temperature=0.0
+                )
+                break
+            except Exception as e:
+                print(f"Groq model {model_name} failed: {e}")
+                
+        if not response:
+            raise Exception("All Groq models failed")
         
         response_text = response.choices[0].message.content.strip()
         # Clean up markdown code blocks if the model ignored instructions
@@ -68,8 +78,20 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
                 return None
                 
             genai.configure(api_key=gemini_key)
-            gemini_model = genai.GenerativeModel('gemini-pro')
-            response = gemini_model.generate_content(prompt)
+            gemini_models = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-1.5-flash", "gemini-pro"]
+            response = None
+            for model_name in gemini_models:
+                try:
+                    gemini_model = genai.GenerativeModel(model_name)
+                    response = gemini_model.generate_content(prompt)
+                    break
+                except Exception as e:
+                    print(f"Gemini model {model_name} failed: {e}")
+                    
+            if not response:
+                print("All Gemini models failed.")
+                return None
+                
             response_text = response.text.strip()
             
             # Clean up markdown code blocks if the model ignored instructions
@@ -119,12 +141,23 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
         else:
             prompt = f"User applying for '{job_title}' has these skills but low keyword density: {skills_str}. Provide exactly 2 short, actionable bullet points advising how to elaborate on them in their Experience bullet points for better context. Keep under 50 words."
 
-        response = client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model="llama-3.3-70b-versatile",
-            temperature=0.7,
-            max_tokens=80
-        )
+        groq_models = ["llama-3.3-70b-versatile", "groq/openai/gpt-oss-120b", "llama-3.1-8b-instant", "gemma2-9b-it"]
+        response = None
+        for model_name in groq_models:
+            try:
+                response = client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model=model_name,
+                    temperature=0.7,
+                    max_tokens=80
+                )
+                break
+            except Exception as e:
+                print(f"Groq tips model {model_name} failed: {e}")
+                
+        if not response:
+            raise Exception("All Groq models failed")
+            
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Groq API tips error: {e}")
@@ -141,8 +174,20 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
                 return ""
                 
             genai.configure(api_key=gemini_key)
-            gemini_model = genai.GenerativeModel('gemini-pro')
-            response = gemini_model.generate_content(prompt)
+            gemini_models = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-1.5-flash", "gemini-pro"]
+            response = None
+            for model_name in gemini_models:
+                try:
+                    gemini_model = genai.GenerativeModel(model_name)
+                    response = gemini_model.generate_content(prompt)
+                    break
+                except Exception as e:
+                    print(f"Gemini tips model {model_name} failed: {e}")
+                    
+            if not response:
+                print("All Gemini models failed.")
+                return ""
+                
             return response.text.strip()
         except Exception as gemini_e:
             print(f"Gemini API tips fallback error: {gemini_e}")
