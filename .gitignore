@@ -90,3 +90,5 @@ service-account.json
 test_resume.pdf
 test_resume.docx
 sample_data/
+
+.streamlit/

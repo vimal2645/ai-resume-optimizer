@@ -351,7 +351,8 @@ if st.button("🚀 Analyze", type="primary"):
     elif not job_description or len(job_description.strip()) < 20:
         st.error("📋 Please paste a job description (at least 20 characters).")
     else:
-        with st.spinner("Building skill index and extracting text…"):
+        with st.status("Analyzing your resume...", expanded=True) as status:
+            st.write("Building skill index and extracting text...")
             kp = _load_keyword_processor()
             archetypes = _load_archetypes()
             synonym_map = _load_synonym_map_cached()
@@ -360,19 +361,15 @@ if st.button("🚀 Analyze", type="primary"):
             resume_filename = uploaded_file.name
             resume_out = parse_resume(resume_bytes, resume_filename, keyword_processor=kp)
 
-        # Surface extraction quality warning
-        quality = resume_out.get("quality", {})
-        if not quality.get("ok", True):
-            st.warning(quality.get("warning", "⚠️ Resume extraction quality warning."))
+            if not resume_out.get("text", "").strip():
+                status.update(label="Extraction failed", state="error")
+                st.error("❌ Could not extract any text from your resume. Please check the file format.")
+                st.stop()
 
-        if not resume_out.get("text", "").strip():
-            st.error("❌ Could not extract any text from your resume. Please check the file format.")
-            st.stop()
-
-        with st.spinner("Parsing job description…"):
+            st.write("Parsing job description...")
             job_keywords = parse_job_description(job_description, keyword_processor=kp)
 
-        with st.spinner("Running AI Deep Scan for skills…"):
+            st.write("Fetching AI-powered skills...")
             llm_skills = extract_skills_with_llm(job_description)
             if llm_skills is not None:
                 # LLM succeeded. Override the locally extracted skills
@@ -382,14 +379,10 @@ if st.button("🚀 Analyze", type="primary"):
                 # Still learn new skills not in local DB!
                 update_local_db(llm_skills)
 
-        if not job_keywords.get("must_have") and not job_keywords.get("raw_skills"):
-            st.warning("⚠️ No specific skills detected in the job description. Results may be limited.")
-
-        with st.spinner("Detecting target role…"):
+            st.write("Running local ATS scoring...")
             role_result = detect_role(job_description, archetypes=archetypes, synonym_map=synonym_map)
             archetype_data = role_result["archetype_data"]
 
-        with st.spinner("Computing ATS score…"):
             score_data = ai_matcher.calculate_enhanced_ats_score(
                 resume_skills=resume_out.get("skills_full", resume_out.get("skills", [])),
                 job_keywords=job_keywords,
@@ -398,19 +391,19 @@ if st.button("🚀 Analyze", type="primary"):
                 jd_text=job_description,
             )
 
-        # Three-bucket classification
-        all_jd_skills = list(dict.fromkeys(
-            (job_keywords.get("must_have") or []) +
-            (job_keywords.get("nice_to_have") or [])
-        ))
-        skill_buckets = classify_skills(
-            jd_skills=all_jd_skills,
-            skills_full=resume_out.get("skills_full", resume_out.get("skills", [])),
-            skills_in_skills_section=resume_out.get("skills_in_skills_section", []),
-            synonym_map=synonym_map,
-        )
+            # Three-bucket classification
+            all_jd_skills = list(dict.fromkeys(
+                (job_keywords.get("must_have") or []) +
+                (job_keywords.get("nice_to_have") or [])
+            ))
+            skill_buckets = classify_skills(
+                jd_skills=all_jd_skills,
+                skills_full=resume_out.get("skills_full", resume_out.get("skills", [])),
+                skills_in_skills_section=resume_out.get("skills_in_skills_section", []),
+                synonym_map=synonym_map,
+            )
 
-        with st.spinner("Generating personalized tips..."):
+            st.write("Fetching AI-powered tips...")
             genuinely_missing = skill_buckets.get("genuinely_missing", [])
             tips = ""
             if genuinely_missing:
@@ -419,6 +412,19 @@ if st.button("🚀 Analyze", type="primary"):
                 top_skills = job_keywords.get("must_have", [])[:5]
                 if top_skills:
                     tips = generate_improvement_tips(top_skills, job_keywords.get("job_title", "Technical Role"), are_missing=False)
+
+            if llm_skills is None:
+                status.update(label="Analysis complete! (Local analysis)", state="complete")
+            else:
+                status.update(label="Analysis complete!", state="complete")
+
+        # Surface extraction quality warning
+        quality = resume_out.get("quality", {})
+        if not quality.get("ok", True):
+            st.warning(quality.get("warning", "⚠️ Resume extraction quality warning."))
+
+        if not job_keywords.get("must_have") and not job_keywords.get("raw_skills"):
+            st.warning("⚠️ No specific skills detected in the job description. Results may be limited.")
 
         # Store in session state
         st.session_state.resume_text        = resume_out["text"]
@@ -437,7 +443,6 @@ if st.button("🚀 Analyze", type="primary"):
         st.session_state.skills_heading_label   = resume_out.get("skills_heading_label", "")
         st.session_state.analysis_done      = True
 
-        st.success("\u2705 Analysis complete!")
         st.rerun()
 
 # ---------------------------------------------------------------------------
