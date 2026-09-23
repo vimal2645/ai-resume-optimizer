@@ -602,48 +602,71 @@ if st.session_state.analysis_done:
                     is_pdf = resume_filename.lower().endswith(".pdf")
                     is_docx = resume_filename.lower().endswith(".docx")
 
+                    pdf_bytes = None
                     if is_docx:
-                        out_bytes, was_changed, before, after = edit_docx_skills(
+                        docx_bytes, was_changed, before, after, results = edit_docx_skills(
                             resume_bytes, skills_to_add
                         )
+                        out_bytes = docx_bytes
+                        mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        ext = ".docx"
                         
                         # Try to seamlessly convert edited DOCX to PDF
                         from utils.converter import convert_docx_to_pdf
                         try:
-                            pdf_bytes = convert_docx_to_pdf(out_bytes)
-                            out_bytes = pdf_bytes
-                            mime = "application/pdf"
-                            ext = ".pdf"
+                            pdf_bytes = convert_docx_to_pdf(docx_bytes)
                         except Exception as conv_err:
-                            st.warning(f"⚠️ PDF conversion failed, providing optimized DOCX instead: {conv_err}")
-                            mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                            ext = ".docx"
+                            st.warning(f"⚠️ PDF conversion failed, providing optimized DOCX only: {conv_err}")
+
                     elif is_pdf:
-                        out_bytes, was_changed, before, after = edit_pdf_skills(
+                        out_bytes, was_changed, before, after, results = edit_pdf_skills(
                             resume_bytes, skills_to_add
                         )
                         mime = "application/pdf"
                         ext = ".pdf"
                     else:
-                        out_bytes, was_changed, before, after = resume_bytes, False, "", ""
+                        out_bytes, was_changed, before, after, results = resume_bytes, False, "", "", {}
                         mime = "application/octet-stream"
                         ext = ""
 
                     out_name = resume_filename.rsplit(".", 1)[0] + f"_optimized{ext}"
 
                     if was_changed and before and after:
+                        if results.get("skipped", 0) > 0:
+                            skipped = ", ".join(results["skipped_names"])
+                            st.warning(f"⚠️ **{results['added']} skills added, {results['skipped']} skipped** because the page was full: {skipped}")
+                        else:
+                            st.success(f"✅ All {results.get('added', 0)} skills added successfully without overlapping.")
+                            
                         with st.expander("🔍 Skills Section Change Preview"):
                             st.markdown("**Before:**")
                             st.code(before, language=None)
                             st.markdown("**After:**")
                             st.code(after, language=None)
 
-                    st.download_button(
-                        label="📄 Download Optimised Resume",
-                        data=out_bytes,
-                        file_name=out_name,
-                        mime=mime,
-                    )
+                    if is_docx and pdf_bytes:
+                        out_name_pdf = resume_filename.rsplit(".", 1)[0] + "_optimized.pdf"
+                        out_name_docx = resume_filename.rsplit(".", 1)[0] + "_optimized.docx"
+                        
+                        st.download_button(
+                            label="📄 Download Optimised (PDF)",
+                            data=pdf_bytes,
+                            file_name=out_name_pdf,
+                            mime="application/pdf",
+                        )
+                        st.download_button(
+                            label="📝 Download Optimised (DOCX)",
+                            data=docx_bytes,
+                            file_name=out_name_docx,
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        )
+                    else:
+                        st.download_button(
+                            label="📄 Download Optimised Resume",
+                            data=out_bytes,
+                            file_name=out_name,
+                            mime=mime,
+                        )
 
                 except Exception as e:
                     st.error(f"Error applying optimizations: {e}")
