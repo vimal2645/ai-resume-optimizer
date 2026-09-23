@@ -7,4 +7,5 @@ scikit-learn>=1.3.0
 numpy>=1.24.0
 PyMuPDF>=1.23.0
 groq>=0.4.2
-google-generativeaidocx2pdf>=0.1.8
+google-generativeai
+docx2pdf>=0.1.8
