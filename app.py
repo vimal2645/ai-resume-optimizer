@@ -606,8 +606,18 @@ if st.session_state.analysis_done:
                         out_bytes, was_changed, before, after = edit_docx_skills(
                             resume_bytes, skills_to_add
                         )
-                        mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        ext = ".docx"
+                        
+                        # Try to seamlessly convert edited DOCX to PDF
+                        from utils.converter import convert_docx_to_pdf
+                        try:
+                            pdf_bytes = convert_docx_to_pdf(out_bytes)
+                            out_bytes = pdf_bytes
+                            mime = "application/pdf"
+                            ext = ".pdf"
+                        except Exception as conv_err:
+                            st.warning(f"⚠️ PDF conversion failed, providing optimized DOCX instead: {conv_err}")
+                            mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            ext = ".docx"
                     elif is_pdf:
                         out_bytes, was_changed, before, after = edit_pdf_skills(
                             resume_bytes, skills_to_add
