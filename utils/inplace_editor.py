@@ -381,6 +381,9 @@ def edit_pdf_skills(
                             g = (c >> 8) & 0xFF
                             b = c & 0xFF
                             text_color = (r / 255, g / 255, b / 255)
+                            # Prevent invisible/unreadable text (e.g. white or light grey on white background)
+                            if sum(text_color) > 2.0:
+                                text_color = (0, 0, 0)
                         break
                     break
                 break

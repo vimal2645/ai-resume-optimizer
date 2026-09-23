@@ -538,7 +538,7 @@ if st.session_state.analysis_done:
         st.write("**✅ Skills in Resume**")
         combined_resume_skills = already + optimizable
         if combined_resume_skills:
-            for skill in combined_resume_skills[:15]:
+            for skill in combined_resume_skills:
                 st.write(f'<span class="skill-listed">{skill}</span>', unsafe_allow_html=True)
         else:
             st.write("None detected")
@@ -547,7 +547,7 @@ if st.session_state.analysis_done:
         st.write("**⚠️ Missing Keywords or Skills to Add**")
         st.caption("These appear in the JD but were NOT found anywhere in your resume.")
         if genuinely_missing:
-            for skill in genuinely_missing[:15]:
+            for skill in genuinely_missing:
                 st.write(f'<span class="skill-missing">{skill}</span>', unsafe_allow_html=True)
         else:
             st.write("None — full coverage! 🎉")
