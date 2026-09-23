@@ -489,7 +489,7 @@ def edit_pdf_skills(
         
         current_fontsize = font_size
         final_fontsize = font_size
-        final_text = wrapped_text
+        final_text = updated_text
         needed_height = 0
         
         while current_fontsize >= 8.0:
@@ -498,7 +498,7 @@ def edit_pdf_skills(
             test_rect = fitz.Rect(bx0, by0, right_boundary, 10000)
             res_height = dummy_page.insert_textbox(
                 test_rect,
-                wrapped_text,
+                updated_text,
                 fontname=font_name,
                 fontsize=current_fontsize,
                 align=0
@@ -514,10 +514,10 @@ def edit_pdf_skills(
         # If it still overflows at 8.0pt, we truncate
         if needed_height > max_allowed_needed_height:
             final_fontsize = 8.0
-            words = wrapped_text.split(separator)
+            words = updated_text.split(separator)
             while len(words) > 0:
                 current_text = separator.join(words).strip()
-                if len(words) < len(wrapped_text.split(separator)):
+                if len(words) < len(updated_text.split(separator)):
                     current_text += "..."
                     
                 dummy_doc = fitz.open()
