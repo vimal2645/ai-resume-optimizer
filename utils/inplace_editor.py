@@ -413,103 +413,89 @@ def edit_pdf_skills(
         right_boundary = max(right_margin, bx1) if bx1 > bx0 else right_margin
         
         textbox_rect = fitz.Rect(bx0, by0, right_boundary, max_bottom)
-        
-        wrapped_text = updated_text.replace('\n', ' ')
-        
-        # ── Calculate exact fit on a dummy page to prevent overlapping text draws ──
+        # ── Calculate exact height needed at original font size ──
         dummy_doc = fitz.open()
-        dummy_page = dummy_doc.new_page(width=page.rect.width, height=page.rect.height)
+        dummy_page = dummy_doc.new_page(width=page.rect.width, height=10000)
+        test_rect = fitz.Rect(bx0, by0, right_boundary, 10000)
+        res_height = dummy_page.insert_textbox(
+            test_rect,
+            wrapped_text,
+            fontname=font_name,
+            fontsize=font_size,
+            align=0
+        )
+        dummy_doc.close()
         
-        current_fontsize = font_size
-        final_text = wrapped_text
-        final_fontsize = font_size
+        needed_height = test_rect.height - res_height + 5  # +5px buffer
+        available_height = max_bottom - by0
         
-        # 1. Try shrinking font down to 7.5pt
-        res = -1
-        while current_fontsize >= 7.5:
-            res = dummy_page.insert_textbox(
+        shift_amount = 0
+        if needed_height > available_height:
+            shift_amount = needed_height - available_height
+            
+        # ── Redact (white-box) the existing skills blocks ──
+        if skills_blocks:
+            for b in skills_blocks:
+                redact_rect = fitz.Rect(b[0], b[1], b[2], b[3])
+                page.add_redact_annot(redact_rect, fill=(1, 1, 1))
+            page.apply_redactions()
+
+        # ── Shift, Scale, and Draw ──
+        if shift_amount > 0 and next_block_y0 is not None:
+            # We must structurally shift the bottom section down
+            split_y = max_bottom
+            
+            # Find the lowest element on the page
+            all_blocks = page.get_text("blocks")
+            bottom_original_lowest_y = max([b[3] for b in all_blocks if b[4].strip()] + [by1])
+            
+            total_needed_height = bottom_original_lowest_y + shift_amount
+            scale_factor = 1.0
+            if total_needed_height > page.rect.height:
+                scale_factor = page.rect.height / (total_needed_height + 20)  # 20px padding
+                
+            matrix = fitz.Matrix(scale_factor, scale_factor)
+            
+            new_doc = fitz.open()
+            new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
+            
+            # Draw top half
+            top_clip = fitz.Rect(0, 0, page.rect.width, split_y)
+            new_page.show_pdf_page(top_clip * matrix, doc, 0, clip=top_clip)
+            
+            # Draw bottom half shifted down
+            bottom_clip = fitz.Rect(0, split_y, page.rect.width, page.rect.height)
+            bottom_target = fitz.Rect(0, split_y + shift_amount, page.rect.width, page.rect.height + shift_amount)
+            new_page.show_pdf_page(bottom_target * matrix, doc, 0, clip=bottom_clip)
+            
+            # Draw the skills text in the new gap
+            textbox_rect = fitz.Rect(bx0, by0, right_boundary, by0 + needed_height)
+            new_page.insert_textbox(
+                textbox_rect * matrix,
+                wrapped_text,
+                fontname=font_name,
+                fontsize=font_size * scale_factor,
+                color=text_color,
+                align=0
+            )
+            
+            doc = new_doc
+            was_changed = True
+            break
+            
+        else:
+            # Fits perfectly in the existing gap!
+            textbox_rect = fitz.Rect(bx0, by0, right_boundary, by0 + needed_height if needed_height < available_height else max_bottom)
+            page.insert_textbox(
                 textbox_rect,
                 wrapped_text,
                 fontname=font_name,
-                fontsize=current_fontsize,
-                align=0,
+                fontsize=font_size,
+                color=text_color,
+                align=0
             )
-            if res >= 0:
-                final_fontsize = current_fontsize
-                break
-            current_fontsize -= 0.5
-            # Clear dummy page for next test by just making a new one
-            dummy_doc.close()
-            dummy_doc = fitz.open()
-            dummy_page = dummy_doc.new_page(width=page.rect.width, height=page.rect.height)
-            
-        # 2. If it still doesn't fit at 7.5pt, truncate words
-        if res < 0:
-            final_fontsize = 7.5
-            words = wrapped_text.split(separator)
-            while len(words) > 0:
-                current_text = separator.join(words).strip()
-                if len(words) < len(wrapped_text.split(separator)):
-                    current_text += "..."
-                res = dummy_page.insert_textbox(
-                    textbox_rect,
-                    current_text,
-                    fontname=font_name,
-                    fontsize=final_fontsize,
-                    align=0,
-                )
-                if res >= 0:
-                    final_text = current_text
-                    break
-                words = words[:-1]
-                # Clear dummy page
-                dummy_doc.close()
-                dummy_doc = fitz.open()
-                dummy_page = dummy_doc.new_page(width=page.rect.width, height=page.rect.height)
-                
-        dummy_doc.close()
-        
-        # ── Draw the final text exactly ONCE on the real page ──
-        page.insert_textbox(
-            textbox_rect,
-            final_text,
-            fontname=font_name,
-            fontsize=final_fontsize,
-            color=text_color,
-            align=0,
-        )
-        
-        # ── Handle Spillover (Leftover Skills) ──
-        # If there are leftover skills that couldn't fit, and there's blank space at the bottom of the page,
-        # draw them there instead of just dropping them.
-        leftover_words = [w for w in wrapped_text.split(separator) if w not in final_text]
-        if leftover_words:
-            # Clean up the words (they might have been chopped strangely)
-            clean_leftovers = []
-            for w in wrapped_text.split(separator):
-                if w not in final_text and w.replace("...", "") not in final_text:
-                    clean_leftovers.append(w)
-                    
-            if clean_leftovers:
-                # Find the absolute lowest text element on the page
-                all_blocks = page.get_text("blocks")
-                lowest_y1 = max([b[3] for b in all_blocks if b[4].strip()] + [by1])
-                
-                # Check if we have at least ~30px of vertical space at the bottom
-                if lowest_y1 < page.rect.height - 30:
-                    bottom_box = fitz.Rect(bx0, lowest_y1 + 15, right_boundary, page.rect.height - 15)
-                    leftover_text = "Additional Skills: " + separator.join(clean_leftovers)
-                    page.insert_textbox(
-                        bottom_box,
-                        leftover_text,
-                        fontname=font_name,
-                        fontsize=7.5,
-                        color=text_color,
-                        align=0,
-                    )
-            
-        was_changed = True
-        break  # Only process the first page where skills heading is found
+            was_changed = True
+            break
 
     out = io.BytesIO()
     doc.save(out)
