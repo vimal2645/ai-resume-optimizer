@@ -478,6 +478,35 @@ def edit_pdf_skills(
             color=text_color,
             align=0,
         )
+        
+        # ── Handle Spillover (Leftover Skills) ──
+        # If there are leftover skills that couldn't fit, and there's blank space at the bottom of the page,
+        # draw them there instead of just dropping them.
+        leftover_words = [w for w in wrapped_text.split(separator) if w not in final_text]
+        if leftover_words:
+            # Clean up the words (they might have been chopped strangely)
+            clean_leftovers = []
+            for w in wrapped_text.split(separator):
+                if w not in final_text and w.replace("...", "") not in final_text:
+                    clean_leftovers.append(w)
+                    
+            if clean_leftovers:
+                # Find the absolute lowest text element on the page
+                all_blocks = page.get_text("blocks")
+                lowest_y1 = max([b[3] for b in all_blocks if b[4].strip()] + [by1])
+                
+                # Check if we have at least ~30px of vertical space at the bottom
+                if lowest_y1 < page.rect.height - 30:
+                    bottom_box = fitz.Rect(bx0, lowest_y1 + 15, right_boundary, page.rect.height - 15)
+                    leftover_text = "Additional Skills: " + separator.join(clean_leftovers)
+                    page.insert_textbox(
+                        bottom_box,
+                        leftover_text,
+                        fontname=font_name,
+                        fontsize=7.5,
+                        color=text_color,
+                        align=0,
+                    )
             
         was_changed = True
         break  # Only process the first page where skills heading is found
