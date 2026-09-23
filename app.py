@@ -352,6 +352,10 @@ if st.button("🚀 Analyze", type="primary"):
         st.error("📋 Please paste a job description (at least 20 characters).")
     else:
         with st.status("Analyzing your resume...", expanded=True) as status:
+            import time
+            start_time = time.time()
+            budget = 30.0
+
             st.write("Building skill index and extracting text...")
             kp = _load_keyword_processor()
             archetypes = _load_archetypes()
@@ -368,16 +372,6 @@ if st.button("🚀 Analyze", type="primary"):
 
             st.write("Parsing job description...")
             job_keywords = parse_job_description(job_description, keyword_processor=kp)
-
-            st.write("Fetching AI-powered skills...")
-            llm_skills = extract_skills_with_llm(job_description)
-            if llm_skills is not None:
-                # LLM succeeded. Override the locally extracted skills
-                job_keywords["must_have"] = llm_skills
-                job_keywords["nice_to_have"] = []
-                job_keywords["raw_skills"] = llm_skills
-                # Still learn new skills not in local DB!
-                update_local_db(llm_skills)
 
             st.write("Running local ATS scoring...")
             role_result = detect_role(job_description, archetypes=archetypes, synonym_map=synonym_map)
@@ -403,18 +397,51 @@ if st.button("🚀 Analyze", type="primary"):
                 synonym_map=synonym_map,
             )
 
-            st.write("Fetching AI-powered tips...")
-            genuinely_missing = skill_buckets.get("genuinely_missing", [])
+            llm_skills = None
             tips = ""
-            if genuinely_missing:
-                tips = generate_improvement_tips(genuinely_missing, job_keywords.get("job_title", "Technical Role"), are_missing=True)
-            else:
-                top_skills = job_keywords.get("must_have", [])[:5]
-                if top_skills:
-                    tips = generate_improvement_tips(top_skills, job_keywords.get("job_title", "Technical Role"), are_missing=False)
 
-            if llm_skills is None:
-                status.update(label="Analysis complete! (Local analysis)", state="complete")
+            if time.time() - start_time < (budget - 8.0):
+                st.write("Fetching AI-powered skills...")
+                llm_skills = extract_skills_with_llm(job_description, start_time, budget)
+                if llm_skills is not None:
+                    # LLM succeeded. Override the locally extracted skills
+                    job_keywords["must_have"] = llm_skills
+                    job_keywords["nice_to_have"] = []
+                    job_keywords["raw_skills"] = llm_skills
+                    # Still learn new skills not in local DB!
+                    update_local_db(llm_skills)
+                    
+                    # Re-run scoring with new LLM skills
+                    score_data = ai_matcher.calculate_enhanced_ats_score(
+                        resume_skills=resume_out.get("skills_full", resume_out.get("skills", [])),
+                        job_keywords=job_keywords,
+                        archetype_data=archetype_data,
+                        resume_text=resume_out.get("text", ""),
+                        jd_text=job_description,
+                    )
+                    all_jd_skills = list(dict.fromkeys(
+                        (job_keywords.get("must_have") or []) +
+                        (job_keywords.get("nice_to_have") or [])
+                    ))
+                    skill_buckets = classify_skills(
+                        jd_skills=all_jd_skills,
+                        skills_full=resume_out.get("skills_full", resume_out.get("skills", [])),
+                        skills_in_skills_section=resume_out.get("skills_in_skills_section", []),
+                        synonym_map=synonym_map,
+                    )
+
+            if time.time() - start_time < (budget - 8.0):
+                st.write("Fetching AI-powered tips...")
+                genuinely_missing = skill_buckets.get("genuinely_missing", [])
+                if genuinely_missing:
+                    tips = generate_improvement_tips(genuinely_missing, job_keywords.get("job_title", "Technical Role"), are_missing=True, start_time=start_time, time_budget=budget)
+                else:
+                    top_skills = job_keywords.get("must_have", [])[:5]
+                    if top_skills:
+                        tips = generate_improvement_tips(top_skills, job_keywords.get("job_title", "Technical Role"), are_missing=False, start_time=start_time, time_budget=budget)
+
+            if llm_skills is None or not tips:
+                status.update(label="Analysis complete! (AI tips unavailable — showing local analysis)", state="complete")
             else:
                 status.update(label="Analysis complete!", state="complete")
 

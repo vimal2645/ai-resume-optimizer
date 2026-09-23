@@ -3,17 +3,15 @@ import os
 import streamlit as st
 
 GROQ_MODELS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
     "openai/gpt-oss-120b",
+    "qwen/qwen3.6-27b",
     "openai/gpt-oss-20b",
 ]
 
 GEMINI_MODELS = [
     "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
+    "gemini-3.5-flash-lite",
     "gemini-2.5-pro",
-    "gemini-3.1-flash-lite",
 ]
 
 def get_key(name):
@@ -22,7 +20,7 @@ def get_key(name):
     except Exception:
         return os.getenv(name)
 
-def _call_llms(prompt, is_extraction=True):
+def _call_llms(prompt, is_extraction=True, start_time=None, time_budget=30.0):
     """
     Helper to execute LLM calls with budgets, trying Groq then Gemini.
     """
@@ -30,15 +28,23 @@ def _call_llms(prompt, is_extraction=True):
     temperature = 0.0 if is_extraction else 0.7
     timeout = 7.0
 
+    import time
+    def _time_exceeded():
+        if start_time is None:
+            return False
+        return (time.time() - start_time) >= (time_budget - 8.0) # buffer of 8 seconds for the next call timeout
+
     # 1. Try Groq (Max 2 models)
     groq_key = get_key("GROQ_API_KEY")
-    if groq_key:
+    if groq_key and not _time_exceeded():
         try:
             from groq import Groq
             import groq
             client = Groq(api_key=groq_key, max_retries=0, timeout=timeout)
             
             for i in range(min(2, len(GROQ_MODELS))):
+                if _time_exceeded():
+                    break
                 model_name = GROQ_MODELS[i]
                 try:
                     response = client.chat.completions.create(
@@ -59,12 +65,14 @@ def _call_llms(prompt, is_extraction=True):
 
     # 2. Try Gemini (Max 2 models)
     gemini_key = get_key("GEMINI_API_KEY")
-    if gemini_key:
+    if gemini_key and not _time_exceeded():
         try:
             import google.generativeai as genai
             genai.configure(api_key=gemini_key)
             
             for i in range(min(2, len(GEMINI_MODELS))):
+                if _time_exceeded():
+                    break
                 model_name = GEMINI_MODELS[i]
                 try:
                     gemini_model = genai.GenerativeModel(model_name)
@@ -88,7 +96,7 @@ def _call_llms(prompt, is_extraction=True):
 
     return None
 
-def extract_skills_with_llm(jd_text: str) -> list | None:
+def extract_skills_with_llm(jd_text: str, start_time=None, time_budget=30.0) -> list | None:
     """
     Calls LLM API to extract professional and technical skills from the JD.
     Returns a list of skills, or None if API key is missing or limit is reached.
@@ -101,7 +109,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
     {jd_text}
     """
 
-    response_text = _call_llms(prompt, is_extraction=True)
+    response_text = _call_llms(prompt, is_extraction=True, start_time=start_time, time_budget=time_budget)
     if not response_text:
         return None
         
@@ -127,7 +135,7 @@ def extract_skills_with_llm(jd_text: str) -> list | None:
         print(f"LLM skill parse error: {e}")
         return None
 
-def generate_improvement_tips(target_skills: list, job_title: str, are_missing: bool = True) -> str:
+def generate_improvement_tips(target_skills: list, job_title: str, are_missing: bool = True, start_time=None, time_budget=30.0) -> str:
     """
     Calls LLM API to get 2 brief bullet points on how to improve the resume.
     Provides standard TF-IDF alignment tips if the LLM fails.
@@ -146,7 +154,7 @@ def generate_improvement_tips(target_skills: list, job_title: str, are_missing: 
     else:
         prompt = f"User applying for '{job_title}' has these skills but low keyword density: {skills_str}. Provide exactly 2 short, actionable bullet points advising how to elaborate on them in their Experience bullet points for better context. Keep under 50 words."
 
-    response_text = _call_llms(prompt, is_extraction=False)
+    response_text = _call_llms(prompt, is_extraction=False, start_time=start_time, time_budget=time_budget)
     if not response_text:
         return fallback_tips
     
