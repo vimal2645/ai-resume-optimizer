@@ -23,7 +23,7 @@ from datetime import datetime
 # Page config (must be first Streamlit call)
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="AI Resume Optimizer",
+    page_title="whzy-scanner",
     page_icon="🎯",
     layout="wide",
     menu_items={"About": "LLM-Free ATS Resume Optimizer — 100% local, zero API costs."},
@@ -323,8 +323,17 @@ def _load_synonym_map_cached():
 # ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
-st.markdown('<div class="main-header">AI Resume Optimizer</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Upload your resume and the job post.<br>Our engine scores the match instantly — nothing leaves your session until you choose to download.</div>', unsafe_allow_html=True)
+col_logo, col_title = st.columns([1, 6])
+with col_logo:
+    if os.path.exists("assets/logo_transparent.png"):
+        st.image("assets/logo_transparent.png", use_container_width=True)
+    elif os.path.exists("logo.png"):
+        st.image("logo.png", use_container_width=True)
+    elif os.path.exists("assets/logo.png"):
+        st.image("assets/logo.png", use_container_width=True)
+with col_title:
+    st.markdown('<div class="main-header" style="text-align: left; margin-bottom: 0;">whzy-scanner</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header" style="text-align: left;">Upload your resume and the job post.<br>Our engine scores the match instantly — nothing leaves your session until you choose to download.</div>', unsafe_allow_html=True)
 
 
 
@@ -574,6 +583,12 @@ if st.session_state.analysis_done:
 
         with c1:
             st.markdown("**📄 Optimised Resume**")
+            st.warning(
+                "⚠️ **Check before applying:** This tool mainly changes and matches skills in keywords "
+                "and is best for scanning. A score of 60% is good for this. If the generated PDF has any "
+                "formatting errors, please manually edit your PDF. To grow your TF-IDF score, check and "
+                "alter all your resume experience and headings to match the job description."
+            )
             st.caption(
                 "Only the Technical Skills section is changed — everything else is byte-identical to your upload."
             )

@@ -430,6 +430,7 @@ def edit_pdf_skills(
             updated_text = separator.join(new_skills)
             
         skills_text_after = updated_text
+        final_text = updated_text
 
         # ── Detect font properties of the skills block ─────────────────────
         font_size = 10.0
@@ -471,14 +472,14 @@ def edit_pdf_skills(
 
         # Find the next block's top boundary to know how much vertical space we have
         if next_block_y0 is not None:
-            # Leave a 5px buffer above the next section heading
-            max_bottom = next_block_y0 - 5
+            # We MUST cut exactly above the next section to avoid slicing it in half.
+            # Using next_block_y0 guarantees the next heading falls entirely in bottom_clip.
+            max_bottom = next_block_y0
         else:
             # If there is no next section (skills is at the very bottom), use page margin
             max_bottom = page.rect.height - 30
-            
-        # Give it at least some minimum height
-        max_bottom = max(max_bottom, by1 + 15)
+            # Give it at least some minimum height if skills push past the margin
+            max_bottom = max(max_bottom, by1 + 15)
 
         # ── Redact (white-box) the existing skills blocks ───────────────────
         if skills_blocks:
@@ -496,14 +497,17 @@ def edit_pdf_skills(
         all_blocks = page.get_text("blocks")
         bottom_original_lowest_y = max([b[3] for b in all_blocks if b[4].strip()] + [by1])
         available_height = max_bottom - by0
-        max_allowed_needed_height = max(available_height, page.rect.height - 20 - bottom_original_lowest_y + available_height)
-        
+        if next_block_y0 is not None:
+            max_allowed_needed_height = max(available_height, page.rect.height - 20 - bottom_original_lowest_y + available_height)
+        else:
+            max_allowed_needed_height = available_height
+            
         current_fontsize = font_size
         final_fontsize = font_size
         final_text = updated_text
         needed_height = 0
         
-        while current_fontsize >= 8.0:
+        while True:
             dummy_doc = fitz.open()
             dummy_page = dummy_doc.new_page(width=page.rect.width, height=10000)
             test_rect = fitz.Rect(bx0, by0, right_boundary, 10000)
@@ -517,7 +521,7 @@ def edit_pdf_skills(
             dummy_doc.close()
             needed_height = test_rect.height - res_height + 5
             
-            if needed_height <= max_allowed_needed_height:
+            if needed_height <= max_allowed_needed_height or current_fontsize <= 8.0:
                 final_fontsize = current_fontsize
                 break
             current_fontsize -= 0.5
@@ -565,27 +569,31 @@ def edit_pdf_skills(
             split_y = max_bottom
             
             new_doc = fitz.open()
-            new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
-            
-            # Draw top half
-            top_clip = fitz.Rect(0, 0, page.rect.width, split_y)
-            new_page.show_pdf_page(top_clip, doc, 0, clip=top_clip)
-            
-            # Draw bottom half shifted down
-            bottom_clip = fitz.Rect(0, split_y, page.rect.width, page.rect.height)
-            bottom_target = fitz.Rect(0, split_y + shift_amount, page.rect.width, page.rect.height + shift_amount)
-            new_page.show_pdf_page(bottom_target, doc, 0, clip=bottom_clip)
-            
-            # Draw the skills text in the new gap
-            textbox_rect = fitz.Rect(bx0, by0, right_boundary, by0 + needed_height)
-            new_page.insert_textbox(
-                textbox_rect,
-                final_text,
-                fontname=font_name,
-                fontsize=final_fontsize,
-                color=text_color,
-                align=0
-            )
+            for p_idx in range(doc.page_count):
+                if p_idx == page.number:
+                    new_page = new_doc.new_page(width=page.rect.width, height=page.rect.height)
+                    
+                    # Draw top half
+                    top_clip = fitz.Rect(0, 0, page.rect.width, split_y)
+                    new_page.show_pdf_page(top_clip, doc, p_idx, clip=top_clip)
+                    
+                    # Draw bottom half shifted down
+                    bottom_clip = fitz.Rect(0, split_y, page.rect.width, page.rect.height)
+                    bottom_target = fitz.Rect(0, split_y + shift_amount, page.rect.width, page.rect.height + shift_amount)
+                    new_page.show_pdf_page(bottom_target, doc, p_idx, clip=bottom_clip)
+                    
+                    # Draw the skills text in the new gap
+                    textbox_rect = fitz.Rect(bx0, by0, right_boundary, by0 + needed_height)
+                    new_page.insert_textbox(
+                        textbox_rect,
+                        final_text,
+                        fontname=font_name,
+                        fontsize=final_fontsize,
+                        color=text_color,
+                        align=0
+                    )
+                else:
+                    new_doc.insert_pdf(doc, from_page=p_idx, to_page=p_idx)
             
             doc = new_doc
             was_changed = True
@@ -610,7 +618,10 @@ def edit_pdf_skills(
     doc.close()
     out.seek(0)
     
-    skipped_names = [s for s in optimizable_skills if s.lower() not in final_text.lower()]
+    skipped_names = []
+    if 'final_text' in locals():
+        skipped_names = [s for s in optimizable_skills if s.lower() not in final_text.lower()]
+        
     results = {
         "added": len(optimizable_skills) - len(skipped_names),
         "skipped": len(skipped_names),
@@ -618,4 +629,4 @@ def edit_pdf_skills(
         "reason": "Page overflow at minimum font size" if skipped_names else ""
     }
     
-    return out.read(), was_changed, skills_text_before, final_text, results
+    return out.read(), was_changed, skills_text_before, skills_text_after, results
