@@ -416,40 +416,68 @@ def edit_pdf_skills(
         
         wrapped_text = updated_text.replace('\n', ' ')
         
-        # Try inserting, shrinking font down to 7.5pt
+        # ── Calculate exact fit on a dummy page to prevent overlapping text draws ──
+        dummy_doc = fitz.open()
+        dummy_page = dummy_doc.new_page(width=page.rect.width, height=page.rect.height)
+        
         current_fontsize = font_size
+        final_text = wrapped_text
+        final_fontsize = font_size
+        
+        # 1. Try shrinking font down to 7.5pt
         res = -1
         while current_fontsize >= 7.5:
-            res = page.insert_textbox(
+            res = dummy_page.insert_textbox(
                 textbox_rect,
                 wrapped_text,
                 fontname=font_name,
                 fontsize=current_fontsize,
-                color=text_color,
                 align=0,
             )
             if res >= 0:
+                final_fontsize = current_fontsize
                 break
             current_fontsize -= 0.5
+            # Clear dummy page for next test by just making a new one
+            dummy_doc.close()
+            dummy_doc = fitz.open()
+            dummy_page = dummy_doc.new_page(width=page.rect.width, height=page.rect.height)
             
-        # If it still doesn't fit at 7.5pt, keep it at 7.5pt and truncate words!
+        # 2. If it still doesn't fit at 7.5pt, truncate words
         if res < 0:
+            final_fontsize = 7.5
             words = wrapped_text.split(separator)
             while len(words) > 0:
                 current_text = separator.join(words).strip()
                 if len(words) < len(wrapped_text.split(separator)):
                     current_text += "..."
-                res = page.insert_textbox(
+                res = dummy_page.insert_textbox(
                     textbox_rect,
                     current_text,
                     fontname=font_name,
-                    fontsize=7.5,
-                    color=text_color,
+                    fontsize=final_fontsize,
                     align=0,
                 )
                 if res >= 0:
+                    final_text = current_text
                     break
                 words = words[:-1]
+                # Clear dummy page
+                dummy_doc.close()
+                dummy_doc = fitz.open()
+                dummy_page = dummy_doc.new_page(width=page.rect.width, height=page.rect.height)
+                
+        dummy_doc.close()
+        
+        # ── Draw the final text exactly ONCE on the real page ──
+        page.insert_textbox(
+            textbox_rect,
+            final_text,
+            fontname=font_name,
+            fontsize=final_fontsize,
+            color=text_color,
+            align=0,
+        )
             
         was_changed = True
         break  # Only process the first page where skills heading is found
