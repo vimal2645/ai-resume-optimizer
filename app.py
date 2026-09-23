@@ -400,7 +400,8 @@ if st.button("🚀 Analyze", type="primary"):
             llm_skills = None
             tips = ""
 
-            if time.time() - start_time < (budget - 8.0):
+            # Use local model at first. Only use LLM extraction if local model missed skills (found < 5)
+            if len(job_keywords.get("must_have", [])) < 5 and (time.time() - start_time < (budget - 8.0)):
                 st.write("Fetching AI-powered skills...")
                 llm_skills = extract_skills_with_llm(job_description, start_time, budget)
                 if llm_skills is not None:

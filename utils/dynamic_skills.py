@@ -24,7 +24,7 @@ def _call_llms(prompt, is_extraction=True, start_time=None, time_budget=30.0):
     """
     Helper to execute LLM calls with budgets, trying Groq then Gemini.
     """
-    max_tokens = 500 if is_extraction else 250
+    max_tokens = 800 if is_extraction else 250
     temperature = 0.0 if is_extraction else 0.7
     timeout = 7.0
 
@@ -55,13 +55,13 @@ def _call_llms(prompt, is_extraction=True, start_time=None, time_budget=30.0):
                     )
                     return response.choices[0].message.content.strip()
                 except (groq.InternalServerError, groq.RateLimitError, groq.APIConnectionError, groq.APITimeoutError) as e:
-                    print(f"Groq {model_name} failed: {type(e).__name__} - {e}")
+                    # Silently skip on standard transient errors to avoid console spam
                     continue
                 except Exception as e:
-                    print(f"Groq {model_name} non-transient error: {type(e).__name__} - {e}")
+                    # Silently break on auth/not_found errors
                     break
         except Exception as init_err:
-            print(f"Groq init failed: {type(init_err).__name__}")
+            pass
 
     # 2. Try Gemini (Max 2 models)
     gemini_key = get_key("GEMINI_API_KEY")
@@ -87,12 +87,11 @@ def _call_llms(prompt, is_extraction=True, start_time=None, time_budget=30.0):
                     return response.text.strip()
                 except Exception as e:
                     err_str = str(e).lower()
-                    print(f"Gemini {model_name} failed: {type(e).__name__} - {e}")
                     if "api_key" in err_str or "permission" in err_str or "unauthorized" in err_str:
                         break
                     continue
         except Exception as init_err:
-            print(f"Gemini init failed: {type(init_err).__name__}")
+            pass
 
     return None
 
@@ -132,7 +131,7 @@ def extract_skills_with_llm(jd_text: str, start_time=None, time_budget=30.0) -> 
                     
         return [str(s).lower() for s in new_skills]
     except Exception as e:
-        print(f"LLM skill parse error: {e}")
+        # Failed to parse JSON, silently fallback to local
         return None
 
 def generate_improvement_tips(target_skills: list, job_title: str, are_missing: bool = True, start_time=None, time_budget=30.0) -> str:
