@@ -358,13 +358,24 @@ def edit_pdf_skills(
                 continue
                 
             # If the block is actually the NEXT section heading, we stop collecting!
+            # Allow for exact matches OR matches that start with the heading followed by a newline/separator
             if re.match(
                 r"^(experience|education|projects|certifications|summary|"
                 r"objective|profile|achievements|awards|publications|"
-                r"professional experience|work experience)\s*:?\s*$",
+                r"professional experience|work experience)(\s*[:\-\n]|\s*$)",
                 btext,
                 re.IGNORECASE,
             ):
+                next_block_y0 = by0
+                break
+                
+            # Heuristic 2: If it's a known heading but grouped in a single line like "WORK EXPERIENCE Data Science..."
+            if re.match(
+                r"^(experience|education|projects|certifications|summary|"
+                r"objective|profile|achievements|awards|publications|"
+                r"professional experience|work experience)\s+",
+                btext,
+            ) and btext.split('\n')[0].isupper():
                 next_block_y0 = by0
                 break
 
