@@ -288,6 +288,17 @@ def edit_pdf_skills(
             # Skip very short blocks that are likely just decorative lines
             if len(btext) < 3:
                 continue
+                
+            # If the block is actually the NEXT section heading, the skills section is blank!
+            if re.match(
+                r"^(experience|education|projects|certifications|summary|"
+                r"objective|profile|achievements|awards|publications|"
+                r"professional experience|work experience)\s*:?\s*$",
+                btext,
+                re.IGNORECASE,
+            ):
+                break
+
             skills_block = block
             break
 
