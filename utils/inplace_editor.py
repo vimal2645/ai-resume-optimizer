@@ -297,17 +297,30 @@ def edit_pdf_skills(
                 btext,
                 re.IGNORECASE,
             ):
+                skills_block = None
+                next_block_y0 = by0
                 break
 
             skills_block = block
             break
+            
+        next_block_y0 = next_block_y0 if 'next_block_y0' in locals() else None
 
-        if skills_block is None:
+        if skills_block is None and next_block_y0 is None:
             continue
-
-        bx0, by0, bx1, by1, btext, *_ = skills_block
-        original_skills_text = btext.strip()
-        skills_text_before = original_skills_text
+            
+        if skills_block is None and next_block_y0 is not None:
+            # The skills section is completely blank. We will create a new block!
+            bx0 = heading_rect.x0
+            by0 = heading_rect.y1 + 2
+            bx1 = heading_rect.x1
+            by1 = by0 + 10 # dummy initial height
+            original_skills_text = ""
+            skills_text_before = ""
+        else:
+            bx0, by0, bx1, by1, btext, *_ = skills_block
+            original_skills_text = btext.strip()
+            skills_text_before = original_skills_text
 
         # ── Dedup ──────────────────────────────────────────────────────────
         existing_tokens = {
@@ -332,7 +345,11 @@ def edit_pdf_skills(
         elif " | " in original_skills_text:
             separator = " | "
 
-        updated_text = original_skills_text.rstrip() + separator + separator.join(new_skills)
+        if original_skills_text:
+            updated_text = original_skills_text.rstrip() + separator + separator.join(new_skills)
+        else:
+            updated_text = separator.join(new_skills)
+            
         skills_text_after = updated_text
 
         # ── Detect font properties of the skills block ─────────────────────
@@ -370,34 +387,57 @@ def edit_pdf_skills(
         except Exception:
             pass
 
+        # Find the next block's top boundary to know how much vertical space we have
+        max_bottom = by1 + 15  # default small allowance
+        if skills_block is None and next_block_y0 is not None:
+            max_bottom = next_block_y0 - 2
+        else:
+            try:
+                # Re-fetch blocks to find index
+                for i, blk in enumerate(blocks):
+                    if blk[1] == by0 and blk[0] == bx0: # match y0 and x0
+                        # Find the next block that is physically below this one
+                        for next_blk in blocks[i+1:]:
+                            if next_blk[1] > by1:
+                                max_bottom = next_blk[1] - 2
+                                break
+                        break
+            except Exception:
+                pass
+            
+        # Give it at least some minimum height
+        max_bottom = max(max_bottom, by1 + 15)
+
         # ── Redact (white-box) the existing skills block ───────────────────
         redact_rect = fitz.Rect(bx0, by0, bx1, by1)
         page.add_redact_annot(redact_rect, fill=(1, 1, 1))
         page.apply_redactions()
 
         # ── Re-draw the updated skills text ───────────────────────────────
-        # Use insert_textbox to automatically word-wrap the text.
-        # We give it a small height allowance (+5) to prevent overlapping with next sections.
-        right_margin = page.rect.width - bx0
-        # If the original block had a wider bounding box, use that instead
+        right_margin = page.rect.width - 30 # default 30px right margin
         right_boundary = max(right_margin, bx1) if bx1 > bx0 else right_margin
         
-        textbox_rect = fitz.Rect(bx0, by0, right_boundary, by1 + 5)
+        textbox_rect = fitz.Rect(bx0, by0, right_boundary, max_bottom)
         
-        # Remove existing newlines since insert_textbox will handle wrapping
-        # but keep paragraph breaks if there were double newlines (rare for skills).
-        # We'll just replace single newlines with spaces to let it wrap naturally.
         wrapped_text = updated_text.replace('\n', ' ')
         
-        page.insert_textbox(
-            textbox_rect,
-            wrapped_text,
-            fontname=font_name,
-            fontsize=max(font_size - 0.5, 8.0),
-            color=text_color,
-            align=0,  # left aligned
-        )
-
+        # Try inserting, if it returns negative (doesn't fit), shrink font and retry
+        current_fontsize = max(font_size - 0.5, 8.0)
+        while current_fontsize >= 6.0:
+            res = page.insert_textbox(
+                textbox_rect,
+                wrapped_text,
+                fontname=font_name,
+                fontsize=current_fontsize,
+                color=text_color,
+                align=0,
+            )
+            # res >= 0 means it successfully wrote text (though some might be truncated if res > 0, 
+            # but at least it didn't fail completely like res < 0)
+            if res >= 0:
+                break
+            current_fontsize -= 0.5
+            
         was_changed = True
         break  # Only process the first page where skills heading is found
 
