@@ -269,8 +269,8 @@ def edit_pdf_skills(
         # Get all text blocks on this page sorted top-to-bottom
         blocks = page.get_text("blocks", sort=True)
         # blocks: list of (x0, y0, x1, y1, text, block_no, block_type)
-        skills_block = None
-        heading_bottom = heading_rect.y1
+        skills_blocks = []
+        next_block_y0 = None
 
         for block in blocks:
             bx0, by0, bx1, by1, btext, *_ = block
@@ -289,7 +289,7 @@ def edit_pdf_skills(
             if len(btext) < 3:
                 continue
                 
-            # If the block is actually the NEXT section heading, the skills section is blank!
+            # If the block is actually the NEXT section heading, we stop collecting!
             if re.match(
                 r"^(experience|education|projects|certifications|summary|"
                 r"objective|profile|achievements|awards|publications|"
@@ -297,19 +297,15 @@ def edit_pdf_skills(
                 btext,
                 re.IGNORECASE,
             ):
-                skills_block = None
                 next_block_y0 = by0
                 break
 
-            skills_block = block
-            break
+            skills_blocks.append(block)
             
-        next_block_y0 = next_block_y0 if 'next_block_y0' in locals() else None
-
-        if skills_block is None and next_block_y0 is None:
+        if not skills_blocks and next_block_y0 is None:
             continue
             
-        if skills_block is None and next_block_y0 is not None:
+        if not skills_blocks and next_block_y0 is not None:
             # The skills section is completely blank. We will create a new block!
             bx0 = heading_rect.x0
             by0 = heading_rect.y1 + 2
@@ -318,8 +314,12 @@ def edit_pdf_skills(
             original_skills_text = ""
             skills_text_before = ""
         else:
-            bx0, by0, bx1, by1, btext, *_ = skills_block
-            original_skills_text = btext.strip()
+            bx0 = min([b[0] for b in skills_blocks])
+            by0 = min([b[1] for b in skills_blocks])
+            bx1 = max([b[2] for b in skills_blocks])
+            by1 = max([b[3] for b in skills_blocks])
+            # Concatenate all text in the blocks, replacing internal newlines with spaces
+            original_skills_text = " ".join([b[4].strip().replace('\n', ' ') for b in skills_blocks])
             skills_text_before = original_skills_text
 
         # ── Dedup ──────────────────────────────────────────────────────────
@@ -391,30 +391,22 @@ def edit_pdf_skills(
             pass
 
         # Find the next block's top boundary to know how much vertical space we have
-        max_bottom = by1 + 15  # default small allowance
-        if skills_block is None and next_block_y0 is not None:
-            max_bottom = next_block_y0 - 2
+        if next_block_y0 is not None:
+            # Leave a 5px buffer above the next section heading
+            max_bottom = next_block_y0 - 5
         else:
-            try:
-                # Re-fetch blocks to find index
-                for i, blk in enumerate(blocks):
-                    if blk[1] == by0 and blk[0] == bx0: # match y0 and x0
-                        # Find the next block that is physically below this one
-                        for next_blk in blocks[i+1:]:
-                            if next_blk[1] > by1:
-                                max_bottom = next_blk[1] - 2
-                                break
-                        break
-            except Exception:
-                pass
+            # If there is no next section (skills is at the very bottom), use page margin
+            max_bottom = page.rect.height - 30
             
         # Give it at least some minimum height
         max_bottom = max(max_bottom, by1 + 15)
 
-        # ── Redact (white-box) the existing skills block ───────────────────
-        redact_rect = fitz.Rect(bx0, by0, bx1, by1)
-        page.add_redact_annot(redact_rect, fill=(1, 1, 1))
-        page.apply_redactions()
+        # ── Redact (white-box) the existing skills blocks ───────────────────
+        if skills_blocks:
+            for b in skills_blocks:
+                redact_rect = fitz.Rect(b[0], b[1], b[2], b[3])
+                page.add_redact_annot(redact_rect, fill=(1, 1, 1))
+            page.apply_redactions()
 
         # ── Re-draw the updated skills text ───────────────────────────────
         right_margin = page.rect.width - 30 # default 30px right margin

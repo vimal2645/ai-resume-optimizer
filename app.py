@@ -203,6 +203,18 @@ st.markdown("""
   }
   div[data-testid="stTextArea"] textarea:focus { border-color: var(--amber) !important; box-shadow: none !important; }
 
+  /* Fix Multiselect Dropdown Text Color Visibility */
+  div[data-baseweb="select"] ul, div[role="listbox"] {
+      background-color: var(--navy-1) !important;
+  }
+  div[data-baseweb="select"] li, div[role="option"] {
+      color: var(--cream) !important;
+  }
+  span[data-baseweb="tag"] {
+      background-color: var(--navy-3) !important;
+      color: var(--cream) !important;
+  }
+
   /* Parity Buttons */
   div[data-testid="stButton"] button {
     font-family:var(--f-sans) !important;font-weight:700 !important;font-size:15px !important;color:#241602 !important;
