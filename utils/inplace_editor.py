@@ -416,34 +416,40 @@ def edit_pdf_skills(
         
         wrapped_text = updated_text.replace('\n', ' ')
         
-        # Allow the font to shrink slightly (max 1.0 point, minimum 9.0)
-        target_fontsize = max(font_size - 1.0, 9.0)
-        
-        # Split by separator to allow clean skill-level truncation if it overflows
-        words = wrapped_text.split(separator)
-        
-        while len(words) > 0:
-            current_text = separator.join(words).strip()
-            if len(words) < len(wrapped_text.split(separator)):
-                current_text += "..." # Add ellipsis if we truncated
-                
+        # Try inserting, shrinking font down to 7.5pt
+        current_fontsize = font_size
+        res = -1
+        while current_fontsize >= 7.5:
             res = page.insert_textbox(
                 textbox_rect,
-                current_text,
+                wrapped_text,
                 fontname=font_name,
-                fontsize=target_fontsize,
+                fontsize=current_fontsize,
                 color=text_color,
                 align=0,
             )
-            
-            # res >= 0 means it successfully fit at least the first word and drew the text
-            # We accept standard truncation by insert_textbox if res > 0
             if res >= 0:
                 break
-                
-            # If res < 0, it means it couldn't even fit the first word, or the box is too small for this much text.
-            # Chop off the last skill and try again
-            words = words[:-1]
+            current_fontsize -= 0.5
+            
+        # If it still doesn't fit at 7.5pt, keep it at 7.5pt and truncate words!
+        if res < 0:
+            words = wrapped_text.split(separator)
+            while len(words) > 0:
+                current_text = separator.join(words).strip()
+                if len(words) < len(wrapped_text.split(separator)):
+                    current_text += "..."
+                res = page.insert_textbox(
+                    textbox_rect,
+                    current_text,
+                    fontname=font_name,
+                    fontsize=7.5,
+                    color=text_color,
+                    align=0,
+                )
+                if res >= 0:
+                    break
+                words = words[:-1]
             
         was_changed = True
         break  # Only process the first page where skills heading is found
